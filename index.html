@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋</title>
+    <style>
+        canvas {
+            background-color: black;
+            display: block;
+            margin: 0 auto;
+        }
+        body {
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            background-color: #222;
+        }
+        #message {
+            font-size: 48px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>井字棋</h1>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <p id="message"></p>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const WIDTH = 600;
+        const HEIGHT = 600;
+        const CELL_SIZE = WIDTH / 3;
+        const LINE_WIDTH = 10;
+        const COLORS = {
+            white: '#FFFFFF',
+            red: '#FF0000',
+            blue: '#0000FF',
+            gray: '#888888'
+        };
+
+        let background = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ];
+        let gameRun = true;
+        let playerChange = 0;
+        let gameTime = 0;
+        let winnerMessage = null;
+
+        function drawBoard() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            ctx.strokeStyle = COLORS.white;
+            ctx.lineWidth = LINE_WIDTH;
+
+            for (let i = 1; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, CELL_SIZE * i);
+                ctx.lineTo(WIDTH, CELL_SIZE * i);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(CELL_SIZE * i, 0);
+                ctx.lineTo(CELL_SIZE * i, HEIGHT);
+                ctx.stroke();
+            }
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (background[row][col] === 'O') {
+                        ctx.strokeStyle = COLORS.blue;
+                        ctx.lineWidth = LINE_WIDTH;
+                        ctx.beginPath();
+                        ctx.arc(
+                            col * CELL_SIZE + CELL_SIZE / 2,
+                            row * CELL_SIZE + CELL_SIZE / 2,
+                            CELL_SIZE / 3,
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.stroke();
+                    } else if (background[row][col] === 'X') {
+                        ctx.strokeStyle = COLORS.red;
+                        ctx.lineWidth = LINE_WIDTH;
+
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            col * CELL_SIZE + CELL_SIZE / 4,
+                            row * CELL_SIZE + CELL_SIZE / 4
+                        );
+                        ctx.lineTo(
+                            col * CELL_SIZE + CELL_SIZE * 3 / 4,
+                            row * CELL_SIZE + CELL_SIZE * 3 / 4
+                        );
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            col * CELL_SIZE + CELL_SIZE / 4,
+                            row * CELL_SIZE + CELL_SIZE * 3 / 4
+                        );
+                        ctx.lineTo(
+                            col * CELL_SIZE + CELL_SIZE * 3 / 4,
+                            row * CELL_SIZE + CELL_SIZE / 4
+                        );
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function checkWin() {
+            for (let i = 0; i < 3; i++) {
+                if (
+                    background[i][0] === background[i][1] &&
+                    background[i][1] === background[i][2] &&
+                    background[i][0] !== ''
+                ) {
+                    gameRun = false;
+                    winnerMessage = `Player ${background[i][0]} wins!`;
+                    return;
+                }
+
+                if (
+                    background[0][i] === background[1][i] &&
+                    background[1][i] === background[2][i] &&
+                    background[0][i] !== ''
+                ) {
+                    gameRun = false;
+                    winnerMessage = `Player ${background[0][i]} wins!`;
+                    return;
+                }
+            }
+
+            if (
+                background[0][0] === background[1][1] &&
+                background[1][1] === background[2][2] &&
+                background[0][0] !== ''
+            ) {
+                gameRun = false;
+                winnerMessage = `Player ${background[0][0]} wins!`;
+                return;
+            }
+
+            if (
+                background[0][2] === background[1][1] &&
+                background[1][1] === background[2][0] &&
+                background[0][2] !== ''
+            ) {
+                gameRun = false;
+                winnerMessage = `Player ${background[0][2]} wins!`;
+                return;
+            }
+
+            if (gameTime === 9) {
+                gameRun = false;
+                winnerMessage = 'Draw!';
+            }
+        }
+
+        canvas.addEventListener('click', (event) => {
+            if (!gameRun) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const row = Math.floor(y / CELL_SIZE);
+            const col = Math.floor(x / CELL_SIZE);
+
+            if (background[row][col] === '') {
+                background[row][col] = playerChange === 0 ? 'O' : 'X';
+                playerChange = 1 - playerChange;
+                gameTime++;
+
+                checkWin();
+                drawBoard();
+
+                if (winnerMessage) {
+                    document.getElementById('message').textContent = winnerMessage;
+                }
+            }
+        });
+
+        drawBoard();
+    </script>
+</body>
+</html>
